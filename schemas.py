@@ -36,3 +36,7 @@ class TicketResponse(BaseModel):
     sla_due_at: Optional[datetime] = None  
     
     model_config = {"from_attributes": True}
+
+class TicketUpdate(BaseModel):
+    status: str
+    assigned_to_id: Optional[int] = None
