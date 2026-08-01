@@ -1,7 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime, timedelta  
+from datetime import datetime, timedelta
+import subprocess
+import platform
+import socket
+
 import models
 import schemas
 from database import engine, get_db
@@ -15,7 +19,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --- SLA Helper Function ---
+# SLA Helper Function
 def calculate_sla(priority: str) -> datetime:
     now = datetime.utcnow()
     if priority == "Critical":
@@ -24,13 +28,33 @@ def calculate_sla(priority: str) -> datetime:
         return now + timedelta(hours=4)
     elif priority == "Medium":
         return now + timedelta(hours=24)
-    else:  # Low priority default
+    else:  
         return now + timedelta(hours=48)
 
-# --- User Routes ---
+# Automated Troubleshooting Diagnostics 
+def run_network_diagnostics() -> str:
+    # 1. Ping Check (Google's DNS server)
+    param = '-n' if platform.system().lower() == 'windows' else '-c'
+    command = ['ping', param, '1', '8.8.8.8']
+    try:
+        subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True)
+        ping_result = "SUCCESS (8.8.8.8 is reachable)"
+    except subprocess.CalledProcessError:
+        ping_result = "FAILED (Network unreachable)"
+
+    # DNS Resolution Check
+    try:
+        ip = socket.gethostbyname("google.com")
+        dns_result = f"SUCCESS (google.com resolves to {ip})"
+    except socket.error:
+        dns_result = "FAILED (DNS resolution error)"
+
+    # Format the log to append to the ticket
+    return f"\n\n--- Automated Diagnostics ---\nPing Check: {ping_result}\nDNS Check: {dns_result}\n-----------------------------"
+
+# User Routes 
 @app.post("/users/", response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    
     db_user = models.User(
         username=user.username, 
         email=user.email, 
@@ -41,19 +65,21 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-# --- Ticket Routes ---
+# Ticket Routes
 @app.post("/tickets/", response_model=schemas.TicketResponse)
 def create_ticket(ticket: schemas.TicketCreate, db: Session = Depends(get_db)):
-    # Verify the user exists first
     user = db.query(models.User).filter(models.User.id == ticket.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    # Calculate the SLA deadline
     sla_deadline = calculate_sla(ticket.priority)
-    
-    # Inject SLA deadline into the dictionary before saving to DB
     ticket_data = ticket.model_dump()
+    
+    # Run diagnostics if it's a network issue
+    if ticket_data.get("category", "").lower() == "network":
+        diagnostic_log = run_network_diagnostics()
+        ticket_data["description"] += diagnostic_log  # Append log to description
+        
     db_ticket = models.Ticket(**ticket_data, sla_due_at=sla_deadline)
     
     db.add(db_ticket)
