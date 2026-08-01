@@ -33,6 +33,6 @@ class TicketResponse(BaseModel):
     status: str
     user_id: int
     created_at: datetime
-    
+    sla_due_at: Optional[datetime] = None  
     
     model_config = {"from_attributes": True}

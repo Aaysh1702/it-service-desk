@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-
+from datetime import datetime, timedelta  
 import models
 import schemas
 from database import engine, get_db
@@ -15,10 +15,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# --- SLA Helper Function ---
+def calculate_sla(priority: str) -> datetime:
+    now = datetime.utcnow()
+    if priority == "Critical":
+        return now + timedelta(hours=2)
+    elif priority == "High":
+        return now + timedelta(hours=4)
+    elif priority == "Medium":
+        return now + timedelta(hours=24)
+    else:  # Low priority default
+        return now + timedelta(hours=48)
+
 # --- User Routes ---
 @app.post("/users/", response_model=schemas.UserResponse)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Note: In a real app, we would hash the password here before saving!
+    
     db_user = models.User(
         username=user.username, 
         email=user.email, 
@@ -37,7 +49,13 @@ def create_ticket(ticket: schemas.TicketCreate, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    db_ticket = models.Ticket(**ticket.model_dump())
+    # Calculate the SLA deadline
+    sla_deadline = calculate_sla(ticket.priority)
+    
+    # Inject SLA deadline into the dictionary before saving to DB
+    ticket_data = ticket.model_dump()
+    db_ticket = models.Ticket(**ticket_data, sla_due_at=sla_deadline)
+    
     db.add(db_ticket)
     db.commit()
     db.refresh(db_ticket)
