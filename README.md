@@ -17,11 +17,10 @@ An ITIL-aligned, automated Service Desk backend and administrative dashboard des
 *   **Systems:** Windows Event Subprocess, ICMP/DNS Routing
 
 ## Dashboard Preview
-*(Note to self: Take a screenshot of your http://127.0.0.1:8000/dashboard page and save it in your project folder as `dashboard.png`, then uncomment the line below!)*
-<!-- ![Admin Dashboard](dashboard.png) -->
+![Admin Dashboard](dashboard.png) 
 
 ## Local Setup Instructions
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/Aaysh1702/it-service-desk.git](https://github.com/Aaysh1702/it-service-desk.git)
+   git clone https://github.com/Aaysh1702/it-service-desk.git
