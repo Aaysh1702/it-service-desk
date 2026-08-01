@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
@@ -109,3 +110,16 @@ def update_ticket(ticket_id: int, ticket_update: schemas.TicketUpdate, db: Sessi
     db.commit()
     db.refresh(db_ticket)
     return db_ticket
+
+# Frontend UI Routes
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/dashboard")
+def dashboard(request: Request, db: Session = Depends(get_db)):
+
+    tickets = db.query(models.Ticket).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html", 
+        context={"request": request, "tickets": tickets}
+    )

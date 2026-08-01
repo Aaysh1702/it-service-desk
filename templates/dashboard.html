@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Service Desk Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Service Desk Admin Dashboard</h1>
+        
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full text-left">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3 px-4">Title</th>
+                        <th class="py-3 px-4">Category</th>
+                        <th class="py-3 px-4">Priority</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4">SLA Deadline</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    <!-- Jinja2 loop to display tickets -->
+                    {% for ticket in tickets %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-4">{{ ticket.id }}</td>
+                        <td class="py-3 px-4 font-semibold">{{ ticket.title }}</td>
+                        <td class="py-3 px-4">{{ ticket.category }}</td>
+                        
+                        <td class="py-3 px-4">
+                            {% if ticket.priority == 'Critical' %}
+                                <span class="bg-red-100 text-red-800 py-1 px-2 rounded text-sm font-bold">{{ ticket.priority }}</span>
+                            {% elif ticket.priority == 'High' %}
+                                <span class="bg-orange-100 text-orange-800 py-1 px-2 rounded text-sm font-bold">{{ ticket.priority }}</span>
+                            {% else %}
+                                <span class="bg-green-100 text-green-800 py-1 px-2 rounded text-sm font-bold">{{ ticket.priority }}</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="py-3 px-4">{{ ticket.status }}</td>
+                        <td class="py-3 px-4 text-sm">{{ ticket.sla_due_at.strftime('%Y-%m-%d %H:%M') if ticket.sla_due_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
