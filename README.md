@@ -1,4 +1,4 @@
-# IT Service Desk Ticket Automation System 
+# Ticket Automation System 
 
 An ITIL-aligned, automated Service Desk backend and administrative dashboard designed to streamline incident management, enforce SLAs, and accelerate technical troubleshooting.
 
